@@ -1,0 +1,30 @@
+{
+  "name": "webthings-z2m-adapter",
+  "version": "1.0.0",
+  "description": "zigbee2mqtt adapter add-on for WebThings Gateway",
+  "main": "index.js",
+  "scripts": {
+    "start": "tsc && node dist/app.js",
+    "lint": "eslint . --ext .ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/supby/webthings-z2m-adapter.git"
+  },
+  "author": "Andre Suzanovich",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/supby/webthings-z2m-adapter/issues"
+  },
+  "homepage": "https://github.com/supby/webthings-z2m-adapter#readme",
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^5.43.0",
+    "eslint": "^8.0.1",
+    "eslint-config-standard-with-typescript": "^34.0.1",
+    "eslint-plugin-import": "^2.25.2",
+    "eslint-plugin-n": "^15.0.0",
+    "eslint-plugin-promise": "^6.0.0",
+    "typescript": "*"
+  }
+}
