@@ -1,0 +1,45 @@
+{
+  "manifest_version": 1,
+  "id": "webthings-z2m-adapter",
+  "name": "Zigbee2mqtt Adapter",
+  "short_name": "z2m adapter",
+  "version": "0.0.1",
+  "description": "Zigbee2mqtt adapter add-on for WebThings Gateway",
+  "homepage_url": "https://github.com/supby/webthings-z2m-adapter",
+  "license": "MPL-2.0",
+  "author": "Andre Suzanovich",  
+  "gateway_specific_settings": {
+    "webthings": {
+      "exec": "{nodeLoader} {path}",
+      "primary_type": "adapter",
+      "strict_max_version": "*",
+      "strict_min_version": "1.0.0"
+    }
+  },
+  "options": {
+    "default": {
+      "optionalSetting": "default value"
+    },
+    "schema": {
+      "type": "object",
+      "required": [
+        "requiredSetting"
+      ],
+      "properties": {
+        "requiredSetting": {
+          "type": "string",
+          "title": "A required setting"
+        },
+        "optionalSetting": {
+          "type": "string",
+          "title": "An optional setting"
+        },
+        "startCounter": {
+          "type": "number",
+          "title": "The number of starts",
+          "readOnly": "true"
+        }
+      }
+    }
+  }
+}
