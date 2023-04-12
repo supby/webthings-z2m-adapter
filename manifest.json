@@ -26,18 +26,34 @@
         "requiredSetting"
       ],
       "properties": {
-        "requiredSetting": {
-          "type": "string",
-          "title": "A required setting"
+        "zigbee2mqttDebugLogs": {
+          "title": "Enable Zigbee2Mqtt debug logs",
+          "type": "boolean"
         },
-        "optionalSetting": {
-          "type": "string",
-          "title": "An optional setting"
-        },
-        "startCounter": {
-          "type": "number",
-          "title": "The number of starts",
-          "readOnly": "true"
+        "zigbee2mqttAdapters": {
+          "title": "List of Zigbee2MQTT adapters",
+          "type": "array",
+          "items": {
+            "title": "Zigbee2MQTT adapter",
+            "type": "object",
+            "required": [
+              "host"
+            ],
+            "properties": {
+              "host": {
+                "type": "string",
+                "title": "Hostname of the mqtt broker (e.g. localhost)"
+              },
+              "port": {
+                "type": "number",
+                "title": "Port of the mqtt broker (default 1883)"
+              },
+              "topicPrefix": {
+                "type": "string",
+                "title": "Topic prefix of the adapter (default zigbee2mqtt)"
+              }
+            }
+          }
         }
       }
     }
