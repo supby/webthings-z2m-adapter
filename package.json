@@ -36,5 +36,9 @@
     "manifest.json",
     "node_modules",
     "dist/index.js"
-  ]
+  ],
+  "dependencies": {
+    "gateway-addon": "^1.1.1",
+    "mqtt": "^4.3.7"
+  }
 }

@@ -1,6 +1,6 @@
 
 function main() {
-    console.log("Hello world");
+    new Zigbee2MqttDriver(addonManager, config);
 }
 
 main()
