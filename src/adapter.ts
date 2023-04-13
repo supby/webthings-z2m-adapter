@@ -1,10 +1,7 @@
 import { Adapter, AddonManagerProxy, Device } from 'gateway-addon';
 import { Config, Zigbee2MQTTAdapter } from './config';
-import mqtt from 'mqtt';
+import mqtt, { OnConnectCallback } from 'mqtt';
 import { Zigbee2MqttDevice } from './device';
-
-
-
 
 interface Response {
   data?: {
@@ -30,9 +27,11 @@ const REMOVE_RESPONSE_POSTFIX = '/bridge/response/device/remove';
 const LOGGING_POSTFIX = '/bridge/logging';
 
 const DEFAULT_PORT = 1883;
+const DEFAULT_TOPIC = 'zigbee2mqtt';
 
 export class Zigbee2MqttAdapter extends Adapter {
   private prefix: string;
+  private port: number;
 
   private client?: mqtt.Client;
 
@@ -41,46 +40,44 @@ export class Zigbee2MqttAdapter extends Adapter {
   constructor(
     addonManager: AddonManagerProxy,
     private config: Config,
-    private adapterConfig: Zigbee2MQTTAdapter
+    private adapterConfig: Zigbee2MQTTAdapter,
+    packageName: string,
   ) {
     super(
-      addonManager,
-      `zb-zigbee2mqtt-${adapterConfig.host}:${adapterConfig.port ?? DEFAULT_PORT}`,
-      'zigbee-adapter'
-    );
-    this.prefix = adapterConfig.topicPrefix ?? 'zigbee2mqtt';
+        addonManager, 
+        `z2m-adapter-${adapterConfig.host}:${adapterConfig.port ?? DEFAULT_PORT}`,
+        packageName);
+
+    this.prefix = adapterConfig.topicPrefix ?? DEFAULT_TOPIC;
+    this.port = this.adapterConfig.port || DEFAULT_PORT;
+
     this.connect();
   }
 
-  async connect(): Promise<void> {
-    const host = this.adapterConfig.host;
-    const port = this.adapterConfig.port || DEFAULT_PORT;
-    const broker = `mqtt://${host}:${port}`;
-    console.log(`Connecting to broker ${broker}`);
-    const client = mqtt.connect(broker);
-    this.client = client;
-
-    client.on('connect', () => {
-      console.log(`Successfully connected to ${broker}`);
-
-      this.subscribe(`${this.prefix}${DEVICES_POSTFIX}`);
-      this.subscribe(`${this.prefix}${PERMIT_RESPONSE_POSTFIX}`);
-      this.subscribe(`${this.prefix}${REMOVE_RESPONSE_POSTFIX}`);
-      if (this.config.zigbee2mqtt?.zigbee2mqttDebugLogs) {
-        this.subscribe(`${this.prefix}${LOGGING_POSTFIX}`);
+  onMqttConnect(broker: string): OnConnectCallback {
+    return () => {
+        console.log(`Successfully connected to ${broker}`);
+  
+        this.subscribe(`${this.prefix}${DEVICES_POSTFIX}`);
+        this.subscribe(`${this.prefix}${PERMIT_RESPONSE_POSTFIX}`);
+        this.subscribe(`${this.prefix}${REMOVE_RESPONSE_POSTFIX}`);
+        if (this.config.zigbee2mqttDebugLogs) {
+          this.subscribe(`${this.prefix}${LOGGING_POSTFIX}`);
+        }
       }
-    });
+  }
 
-    client.on('error', (error) => {
-      console.error(`Could not connect to broker: ${error}`);
-    });
+  onMqttError(error: Error) {
+    console.error(`Could not connect to broker: ${error}`);
+  }
 
-    client.on('message', (topic, message) => {
-      const raw = message.toString();
+  onMqttMessage(topic: string, message: Buffer) {
+    const raw = message.toString();
 
-      if (debug()) {
-        console.log(`Received on ${topic}: ${raw}`);
-      }
+    // TODO: read debug flag from config
+    //   if (debug()) {
+    //     console.log(`Received on ${topic}: ${raw}`);
+    //   }
 
       try {
         const json = JSON.parse(raw);
@@ -88,7 +85,7 @@ export class Zigbee2MqttAdapter extends Adapter {
         const parts = topic.split('/');
 
         if (topic.endsWith(DEVICES_POSTFIX)) {
-          this.handleDevices(client, json);
+          this.handleDevices(this.client, json);
         } else if (parts.length == 2) {
           const friendlyName = parts[1];
           const device = this.deviceByFriendlyName[friendlyName];
@@ -134,7 +131,19 @@ export class Zigbee2MqttAdapter extends Adapter {
       } catch (error) {
         console.error(`Could not process message ${raw}: ${error}`);
       }
-    });
+  }
+
+  async connect(): Promise<void> {
+    const broker = `mqtt://${this.adapterConfig.host}:${this.port}`;
+
+    console.log(`Connecting to broker ${broker}`);
+
+    const client = mqtt.connect(broker);
+    this.client = client;
+
+    client.on('connect', this.onMqttConnect(broker));
+    client.on('error', this.onMqttError);
+    client.on('message', this.onMqttMessage);
   }
 
   private subscribe(topic: string): void {
@@ -172,9 +181,11 @@ export class Zigbee2MqttAdapter extends Adapter {
             this.handleDeviceAdded(device);
             this.deviceByFriendlyName[deviceDefinition.friendly_name as string] = device;
             device.fetchValues();
-          } else if (debug()) {
-            console.log(`Device ${id} already exists`);
-          }
+          } 
+          // TODO: read debug flag from config
+        //   else if (debug()) {
+        //     console.log(`Device ${id} already exists`);
+        //   }
         } else {
           console.log(`Ignoring device without id: ${JSON.stringify(deviceDefinition)}`);
         }
@@ -203,9 +214,10 @@ export class Zigbee2MqttAdapter extends Adapter {
   }
 
   private publish(topic: string, payload: string): void {
-    if (debug()) {
-      console.log(`Sending ${payload} to ${topic}`);
-    }
+    // TODO: read debug flag from config
+    // if (debug()) {
+    //   console.log(`Sending ${payload} to ${topic}`);
+    // }
 
     this?.client?.publish(topic, payload, (error) => {
       if (error) {

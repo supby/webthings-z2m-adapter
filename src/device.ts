@@ -11,13 +11,8 @@ import {
   parseType,
   parseUnit,
   HeatingCoolingProperty,
-} from './zigbee2mqtt-property';
+} from './property';
 import mqtt from 'mqtt';
-import DEBUG_FLAG from '../zb-debug';
-
-function debug(): boolean {
-  return DEBUG_FLAG.DEBUG_zigbee2mqtt;
-}
 
 const IGNORED_PROPERTIES = [
   'linkquality',
