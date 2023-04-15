@@ -85,52 +85,75 @@ export class Zigbee2MqttAdapter extends Adapter {
         const parts = topic.split('/');
 
         if (topic.endsWith(DEVICES_POSTFIX)) {
-          this.handleDevices(this.client, json);
-        } else if (parts.length == 2) {
-          const friendlyName = parts[1];
-          const device = this.deviceByFriendlyName[friendlyName];
-
-          if (device) {
-            device.update(json);
-          } else {
-            console.log(`Could not find device with friendlyName ${friendlyName}`);
-          }
-        } else if (topic.endsWith(PERMIT_RESPONSE_POSTFIX)) {
-          const response: Response = json;
-
-          if (response.error) {
-            console.log(`Could not enable permit join mode: ${response.error}`);
-          } else if (response.status === 'ok') {
-            if (response.data?.value) {
-              console.log('Bridge is now permitting new devices to join');
-            } else {
-              console.log('Bridge is no longer permitting new devices to join');
-            }
-          }
-        } else if (topic.endsWith(REMOVE_RESPONSE_POSTFIX)) {
-          const response: Response = json;
-          const id = response.data?.id ?? 'unknown';
-
-          if (response.error) {
-            console.log(`Could not remove device ${id}: ${response.error}`);
-          } else if (response.status === 'ok') {
-            console.log(`Removed device ${id} successfully`);
-
-            const existingDevice = this.getDevice(id);
-
-            if (existingDevice) {
-              this.handleDeviceRemoved(existingDevice);
-            } else {
-              console.warn(`Could not find device with id ${id}`);
-            }
-          }
-        } else if (topic.indexOf(LOGGING_POSTFIX) > -1) {
-          const log: Log = json;
-          console.log(`Zigbee2Mqtt::${log.level}: ${log.message}`);
+          this.handleDevices(json);
+          return
         }
+
+        if (topic.endsWith(PERMIT_RESPONSE_POSTFIX)) {
+          this.handlePermitResponse(json);
+          return
+        }
+
+        if (topic.endsWith(REMOVE_RESPONSE_POSTFIX)) {
+          this.handleRemoveResponse(json);
+          return
+        }
+
+        if (topic.indexOf(LOGGING_POSTFIX) > -1) {
+          this.handleLogging(json);
+          return
+        }
+
+        if (parts.length < 2) { 
+          return
+        }
+
+        const friendlyName = parts[1];
+        const device = this.deviceByFriendlyName[friendlyName];
+
+        if (device) {
+          device.update(json);
+        } else {
+          console.log(`Could not find device with friendlyName ${friendlyName}`);
+        }
+
+        
       } catch (error) {
         console.error(`Could not process message ${raw}: ${error}`);
       }
+  }
+
+  private handleLogging(log: Log) {
+    console.log(`Zigbee2Mqtt::${log.level}: ${log.message}`);
+  }
+
+  private handleRemoveResponse(response: Response) {
+    const id = response.data?.id ?? 'unknown';
+    if (response.error) {
+      console.log(`Could not remove device ${id}: ${response.error}`);
+    } else if (response.status === 'ok') {
+      console.log(`Removed device ${id} successfully`);
+
+      const existingDevice = this.getDevice(id);
+
+      if (existingDevice) {
+        this.handleDeviceRemoved(existingDevice);
+      } else {
+        console.warn(`Could not find device with id ${id}`);
+      }
+    }
+  }
+
+  private handlePermitResponse(response: Response) {
+    if (response.error) {
+      console.log(`Could not enable permit join mode: ${response.error}`);
+    } else if (response.status === 'ok') {
+      if (response.data?.value) {
+        console.log('Bridge is now permitting new devices to join');
+      } else {
+        console.log('Bridge is no longer permitting new devices to join');
+      }
+    }
   }
 
   async connect(): Promise<void> {
@@ -163,36 +186,44 @@ export class Zigbee2MqttAdapter extends Adapter {
     });
   }
 
-  private handleDevices(client: mqtt.Client, deviceDefinitions: DeviceDefinition[]): void {
+  private handleDevices(deviceDefinitions: DeviceDefinition[]): void {
     if (!Array.isArray(deviceDefinitions)) {
       console.log(`Expected list of devices but got ${typeof deviceDefinitions}`);
       return;
     }
 
     for (const deviceDefinition of deviceDefinitions) {
-      if (deviceDefinition.type == 'EndDevice' || deviceDefinition.type == 'Router') {
-        const id = deviceDefinition.ieee_address;
-
-        if (id) {
-          const existingDevice = this.getDevice(id);
-
-          if (!existingDevice) {
-            const device = new Zigbee2MqttDevice(this, id, deviceDefinition, client, this.prefix);
-            this.handleDeviceAdded(device);
-            this.deviceByFriendlyName[deviceDefinition.friendly_name as string] = device;
-            device.fetchValues();
-          } 
-          // TODO: read debug flag from config
-        //   else if (debug()) {
-        //     console.log(`Device ${id} already exists`);
-        //   }
-        } else {
-          console.log(`Ignoring device without id: ${JSON.stringify(deviceDefinition)}`);
-        }
-      } else {
-        console.log(`Ignoring device of type ${deviceDefinition.type}`);
-      }
+      this.handleDevice(deviceDefinition);
     }
+  }
+
+  private handleDevice(deviceDefinition: DeviceDefinition) {
+    if (deviceDefinition.type != 'EndDevice' && deviceDefinition.type != 'Router') {
+      console.log(`Ignoring device of type ${deviceDefinition.type}`);
+      return
+    }
+
+    const id = deviceDefinition.ieee_address;
+    if (!id) {
+      console.log(`Ignoring device without id: ${JSON.stringify(deviceDefinition)}`);
+      return
+    }
+
+    const existingDevice = this.getDevice(id);
+    if (!existingDevice) {
+      this.addNewDevice(id, deviceDefinition);
+    }
+    // TODO: read debug flag from config
+    //   else if (debug()) {
+    //     console.log(`Device ${id} already exists`);
+    //   }      
+  }
+
+  private addNewDevice(id: string, deviceDefinition: DeviceDefinition) {
+    const device = new Zigbee2MqttDevice(this, id, deviceDefinition, this.client, this.prefix);
+    this.handleDeviceAdded(device);
+    this.deviceByFriendlyName[deviceDefinition.friendly_name as string] = device;
+    device.fetchValues();
   }
 
   startPairing(timeoutSeconds: number): void {
