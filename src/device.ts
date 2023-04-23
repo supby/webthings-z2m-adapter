@@ -1,18 +1,18 @@
 import { Action, Device, Event } from 'gateway-addon';
-import { PropertyValue, Event as EventSchema } from 'gateway-addon/lib/schema';
+import { PropertyValueType, Event as EventSchema } from 'gateway-addon/lib/schema';
 import { Zigbee2MqttAdapter, DeviceDefinition, Expos } from './adapter';
 import {
-  OnOffProperty,
-  BrightnessProperty,
-  ColorTemperatureProperty,
-  ColorProperty,
   Zigbee2MqttProperty,
   WRITE_BIT,
   parseType,
-  parseUnit,
-  HeatingCoolingProperty,
-} from './property';
+  parseUnit,  
+} from './properties/genericProperty';
 import mqtt from 'mqtt';
+import { OnOffProperty } from './properties/onOffProperty';
+import { BrightnessProperty } from './properties/brightnessProperty';
+import { ColorTemperatureProperty } from './properties/colorTemperatureProperty';
+import { ColorProperty } from './properties/colorProperty';
+import { HeatingCoolingProperty } from './properties/heatingCoolingProperty';
 
 const IGNORED_PROPERTIES = [
   'linkquality',
@@ -69,7 +69,16 @@ export class Zigbee2MqttDevice extends Device {
           this.createLightProperties(expose);
           break;
         case 'switch':
-          this.createSmartPlugProperties(expose);
+          this.createSwitchProperties(expose);
+          break;
+        case 'fan':
+          this.createFanProperties(expose);
+          break;
+        case 'cover':
+          this.createCoverProperties(expose);
+          break;
+        case 'lock':
+          this.createLockProperties(expose);
           break;
         case 'climate':
           this.createThermostatProperties(expose);
@@ -90,14 +99,25 @@ export class Zigbee2MqttDevice extends Device {
       }
     }
   }
+  createLockProperties(expose: Expos) {
+    throw new Error('Method not implemented.');
+  }
+  createCoverProperties(expose: Expos) {
+    throw new Error('Method not implemented.');
+  }
+  createFanProperties(expose: Expos) {
+    throw new Error('Method not implemented.');
+  }
 
   private createLightProperties(expose: Expos): void {
     if (expose.features) {
       ((this as unknown) as { '@type': string[] })['@type'].push('Light');
 
+      // TODO: add properties: color_hs, min_brightness, level_config, color_temp_startup
+
       for (const feature of expose.features) {
         if (feature.name) {
-          switch (feature.name) {
+          switch (feature.name) {            
             case 'state':
               {
                 console.log(`Creating property for ${feature.name}`);
@@ -168,7 +188,7 @@ export class Zigbee2MqttDevice extends Device {
     }
   }
 
-  private createSmartPlugProperties(expose: Expos): void {
+  private createSwitchProperties(expose: Expos): void {
     if (expose.features) {
       ((this as unknown) as { '@type': string[] })['@type'].push('SmartPlug');
 
@@ -210,7 +230,7 @@ export class Zigbee2MqttDevice extends Device {
             case 'system_mode': {
               console.log(`Creating property for ${feature.name}`);
 
-              const property = new Zigbee2MqttProperty<string>(
+              const property = new Zigbee2MqttProperty<"string">(
                 this,
                 feature.name,
                 feature,
@@ -320,7 +340,7 @@ export class Zigbee2MqttDevice extends Device {
     }
   }
 
-  private createProperty<T extends PropertyValue>(expose: Expos): void {
+  private createProperty<T extends PropertyValueType>(expose: Expos): void {
     if (expose.name) {
       if (IGNORED_PROPERTIES.includes(expose.name)) {
         return;
@@ -342,7 +362,7 @@ export class Zigbee2MqttDevice extends Device {
     }
   }
 
-  update(update: Record<string, PropertyValue>): void {
+  update(update: Record<string, PropertyValueType>): void {
     if (typeof update !== 'object') {
       console.log(`Expected object but got ${typeof update}`);
     }
@@ -363,22 +383,23 @@ export class Zigbee2MqttDevice extends Device {
         );
 
         if (!exists) {
-          if (debug()) {
-            console.log(`Event '${value}' does not exist on ${this.getTitle()} (${this.getId()})`);
-          }
+          // if (debug()) {
+          //   console.log(`Event '${value}' does not exist on ${this.getTitle()} (${this.getId()})`);
+          // }
           continue;
         }
 
         const event = new Event(this, value as string);
         this.eventNotify(event);
       } else {
-        const property = this.findProperty(key) as Zigbee2MqttProperty<PropertyValue>;
+        const property = this.findProperty(key) as Zigbee2MqttProperty<PropertyValueType>;
 
         if (property) {
           property.update(value, update);
-        } else if (debug()) {
-          console.log(`Property '${key}' does not exist on ${this.getTitle()} (${this.getId()})`);
-        }
+        } 
+        // else if (debug()) {
+        //   console.log(`Property '${key}' does not exist on ${this.getTitle()} (${this.getId()})`);
+        // }
       }
     }
   }
@@ -392,9 +413,9 @@ export class Zigbee2MqttDevice extends Device {
       const writeTopic = `${this.deviceTopic}/set`;
       const json = { [name]: input };
 
-      if (debug()) {
-        console.log(`Sending ${JSON.stringify(json)} to ${writeTopic}`);
-      }
+      // if (debug()) {
+      //   console.log(`Sending ${JSON.stringify(json)} to ${writeTopic}`);
+      // }
 
       this.client.publish(writeTopic, JSON.stringify(json), (error) => {
         action.finish();
@@ -410,7 +431,7 @@ export class Zigbee2MqttDevice extends Device {
 
   fetchValues(): void {
     const { properties } = (this as unknown) as {
-      properties: Map<string, Zigbee2MqttProperty<PropertyValue>>;
+      properties: Map<string, Zigbee2MqttProperty<PropertyValueType>>;
     };
 
     const payload: Record<string, string> = {};
@@ -425,17 +446,18 @@ export class Zigbee2MqttDevice extends Device {
       const readTopic = `${this.deviceTopic}/get`;
       const readPayload = JSON.stringify(payload);
 
-      if (debug()) {
-        console.log(`Sending ${readPayload} to ${readTopic}`);
-      }
+      // if (debug()) {
+      //   console.log(`Sending ${readPayload} to ${readTopic}`);
+      // }
 
       this.client.publish(readTopic, readPayload, (error) => {
         if (error) {
           console.warn(`Could not send ${readPayload} to ${readTopic}: ${console.error()}`);
         }
       });
-    } else if (debug()) {
-      console.log(`${this.getTitle()} has no readable properties`);
-    }
+    } 
+    // else if (debug()) {
+    //   console.log(`${this.getTitle()} has no readable properties`);
+    // }
   }
 }
