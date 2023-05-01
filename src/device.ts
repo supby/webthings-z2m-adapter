@@ -13,6 +13,8 @@ import { BrightnessProperty } from './properties/brightnessProperty';
 import { ColorTemperatureProperty } from './properties/colorTemperatureProperty';
 import { ColorProperty } from './properties/colorProperty';
 import { HeatingCoolingProperty } from './properties/heatingCoolingProperty';
+import { ContactProperty } from './properties/contactProperty';
+import { LeakProperty } from './properties/leakProperty';
 
 const IGNORED_PROPERTIES = [
   'linkquality',
@@ -92,7 +94,7 @@ export class Zigbee2MqttDevice extends Device {
             if (isWriteOnly) {
               this.createAction(expose);
             } else {
-              this.createProperty(expose);
+              this.createGenericProperty(expose);
             }
           }
           break;
@@ -257,7 +259,7 @@ export class Zigbee2MqttDevice extends Device {
               }
               break;
             default:
-              this.createProperty(feature);
+              this.createGenericProperty(feature);
               break;
           }
         } else {
@@ -318,43 +320,61 @@ export class Zigbee2MqttDevice extends Device {
   }
 
   private createAction(expose: Expos): void {
-    if (expose.name) {
-      console.log(`Creating action for ${expose.name}`);
+    if (!expose.name) return
 
-      this.addAction(expose.name, {
-        description: expose.description,
-        input: {
-          type: parseType(expose),
-          unit: parseUnit(expose.unit),
-          enum: expose.values,
-          minimum: expose.value_min,
-          maximum: expose.value_max,
-        },
-      });
-    } else {
-      console.log(`Ignoring action without name: ${JSON.stringify(expose, null, 0)}`);
-    }
+    console.log(`Creating action for ${expose.name}`);
+
+    this.addAction(expose.name, {
+      description: expose.description,
+      input: {
+        type: parseType(expose),
+        unit: parseUnit(expose.unit),
+        enum: expose.values,
+        minimum: expose.value_min,
+        maximum: expose.value_max,
+      },
+    });
   }
 
-  private createProperty<T extends PropertyValueType>(expose: Expos): void {
-    if (expose.name) {
-      if (IGNORED_PROPERTIES.includes(expose.name)) {
-        return;
-      }
+  private createGenericProperty<T extends PropertyValueType>(expose: Expos): void {
+    if (!expose.name) return
 
-      console.log(`Creating property for ${expose.name}`);
+    if (IGNORED_PROPERTIES.includes(expose.name)) return;
 
-      const property = new Zigbee2MqttProperty<T>(
-        this,
-        expose.name,
-        expose,
-        this.client,
-        this.deviceTopic
-      );
+    console.log(`Creating property for ${expose.name}`);
 
-      this.addProperty(property);
-    } else {
-      console.log(`Ignoring property without name: ${JSON.stringify(expose, null, 0)}`);
+    switch (expose.name) {
+      case 'contact': {
+          const property = new ContactProperty(
+            this,
+            expose.name,
+            expose,
+            this.client,
+            this.deviceTopic);
+          this.addProperty(property);
+        }
+        break;
+        case 'water_leak': {
+          const property = new LeakProperty(
+            this,
+            expose.name,
+            expose,
+            this.client,
+            this.deviceTopic);
+          this.addProperty(property);
+        }
+        break;
+      default: {
+          const property = new Zigbee2MqttProperty<T>(
+            this,
+            expose.name,
+            expose,
+            this.client,
+            this.deviceTopic
+          );
+          this.addProperty(property);
+        }
+        break;
     }
   }
 

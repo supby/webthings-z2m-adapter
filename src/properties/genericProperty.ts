@@ -37,7 +37,7 @@ export function parseUnit(unit?: string): string | undefined {
   return unit;
 }
 
-function isWritable(access: number): boolean {
+export function isWritable(access: number): boolean {
   return (access & WRITE_BIT) != 0;
 }
 
