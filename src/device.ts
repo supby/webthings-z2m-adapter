@@ -190,14 +190,15 @@ export class Zigbee2MqttDevice extends Device {
 
   private createSwitchProperties(expose: Expos): void {
     if (expose.features) {
-      ((this as unknown) as { '@type': string[] })['@type'].push('SmartPlug');
+      ((this as unknown) as { '@type': string[] })['@type'].push('OnOffSwitch');
 
-      for (const feature of expose.features) {
-        if (feature.name) {
-          switch (feature.name) {
-            case 'state':
-              {
-                console.log(`Creating property for ${feature.name}`);
+      for (const feature of expose.features) {        
+        if (feature.name == 'state' || 
+            feature.name == 'state_left' || 
+            feature.name == 'state_right' || 
+            feature.name == 'state_bottom_left' || 
+            feature.name == 'state_bottom_right') {
+              console.log(`Creating property for ${feature.name}`);
 
                 const property = new OnOffProperty(
                   this,
@@ -208,15 +209,10 @@ export class Zigbee2MqttDevice extends Device {
                 );
 
                 this.addProperty(property);
-              }
-              break;
-          }
-        } else {
-          console.log(`Ignoring property without name: ${JSON.stringify(expose, null, 0)}`);
-        }
+            }
       }
     } else {
-      console.warn(`Expected features array in light expose: ${JSON.stringify(expose)}`);
+      console.warn(`Expected features array in switch expose: ${JSON.stringify(expose)}`);
     }
   }
 
