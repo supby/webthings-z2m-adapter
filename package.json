@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/supby/webthings-z2m-adapter#readme",
   "devDependencies": {
+    "@types/node": "^18.16.3",
     "@typescript-eslint/eslint-plugin": "^5.43.0",
     "eslint": "^8.0.1",
     "eslint-config-standard-with-typescript": "^34.0.1",
@@ -35,7 +36,18 @@
     "SHA256SUMS",
     "manifest.json",
     "node_modules",
-    "dist/index.js"
+    "dist/index.js",
+    "dist/adapter.js",
+    "dist/device.js",
+    "dist/driver.js",
+    "dist/properties/brightnessProperty.js",
+    "dist/properties/colorProperty.js",
+    "dist/properties/colorTemperatureProperty.js",
+    "dist/properties/contactProperty.js",
+    "dist/properties/genericProperty.js",
+    "dist/properties/heatingCoolingProperty.js",
+    "dist/properties/leakProperty.js",
+    "dist/properties/onOffProperty.js"
   ],
   "dependencies": {
     "color": "^4.2.3",

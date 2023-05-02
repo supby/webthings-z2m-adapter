@@ -79,48 +79,47 @@ export class Zigbee2MqttAdapter extends Adapter {
     //     console.log(`Received on ${topic}: ${raw}`);
     //   }
 
-      try {
-        const json = JSON.parse(raw);
+    try {
+      const json = JSON.parse(raw);
 
-        const parts = topic.split('/');
-
-        if (topic.endsWith(DEVICES_POSTFIX)) {
-          this.handleDevices(json);
-          return
-        }
-
-        if (topic.endsWith(PERMIT_RESPONSE_POSTFIX)) {
-          this.handlePermitResponse(json);
-          return
-        }
-
-        if (topic.endsWith(REMOVE_RESPONSE_POSTFIX)) {
-          this.handleRemoveResponse(json);
-          return
-        }
-
-        if (topic.indexOf(LOGGING_POSTFIX) > -1) {
-          this.handleLogging(json);
-          return
-        }
-
-        if (parts.length < 2) { 
-          return
-        }
-
-        const friendlyName = parts[1];
-        const device = this.deviceByFriendlyName[friendlyName];
-
-        if (device) {
-          device.update(json);
-        } else {
-          console.log(`Could not find device with friendlyName ${friendlyName}`);
-        }
-
-        
-      } catch (error) {
-        console.error(`Could not process message ${raw}: ${error}`);
+      if (topic.endsWith(DEVICES_POSTFIX)) {
+        this.handleDevices(json);
+        return
       }
+
+      if (topic.endsWith(PERMIT_RESPONSE_POSTFIX)) {
+        this.handlePermitResponse(json);
+        return
+      }
+
+      if (topic.endsWith(REMOVE_RESPONSE_POSTFIX)) {
+        this.handleRemoveResponse(json);
+        return
+      }
+
+      if (topic.indexOf(LOGGING_POSTFIX) > -1) {
+        this.handleLogging(json);
+        return
+      }
+
+      const parts = topic.split('/');
+      if (parts.length < 2) { 
+        return
+      }
+
+      const friendlyName = parts[1];
+      const device = this.deviceByFriendlyName[friendlyName];
+
+      if (device) {
+        device.update(json);
+      } else {
+        console.log(`Could not find device with friendlyName ${friendlyName}`);
+      }
+
+      
+    } catch (error) {
+      console.error(`Could not process message ${raw}: ${error}`);
+    }
   }
 
   private handleLogging(log: Log) {
@@ -165,8 +164,8 @@ export class Zigbee2MqttAdapter extends Adapter {
     this.client = client;
 
     client.on('connect', this.onMqttConnect(broker));
-    client.on('error', this.onMqttError);
-    client.on('message', this.onMqttMessage);
+    client.on('error', (e) => this.onMqttError(e));
+    client.on('message', (t, msg) => this.onMqttMessage(t, msg));
   }
 
   private subscribe(topic: string): void {

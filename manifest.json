@@ -17,13 +17,11 @@
     }
   },
   "options": {
-    "default": {
-      "optionalSetting": "default value"
+    "default": {      
     },
     "schema": {
       "type": "object",
       "required": [
-        "requiredSetting"
       ],
       "properties": {
         "zigbee2mqttDebugLogs": {
