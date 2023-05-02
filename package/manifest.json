@@ -1,0 +1,59 @@
+{
+  "manifest_version": 1,
+  "id": "webthings-z2m-adapter",
+  "name": "Zigbee2mqtt Adapter",
+  "short_name": "z2m adapter",
+  "version": "0.0.1",
+  "description": "Zigbee2mqtt adapter add-on for WebThings Gateway",
+  "homepage_url": "https://github.com/supby/webthings-z2m-adapter",
+  "license": "MPL-2.0",
+  "author": "Andre Suzanovich",  
+  "gateway_specific_settings": {
+    "webthings": {
+      "exec": "{nodeLoader} {path}",
+      "primary_type": "adapter",
+      "strict_max_version": "*",
+      "strict_min_version": "1.0.0"
+    }
+  },
+  "options": {
+    "default": {      
+    },
+    "schema": {
+      "type": "object",
+      "required": [
+      ],
+      "properties": {
+        "zigbee2mqttDebugLogs": {
+          "title": "Enable Zigbee2Mqtt debug logs",
+          "type": "boolean"
+        },
+        "zigbee2mqttAdapters": {
+          "title": "List of Zigbee2MQTT adapters",
+          "type": "array",
+          "items": {
+            "title": "Zigbee2MQTT adapter",
+            "type": "object",
+            "required": [
+              "host"
+            ],
+            "properties": {
+              "host": {
+                "type": "string",
+                "title": "Hostname of the mqtt broker (e.g. localhost)"
+              },
+              "port": {
+                "type": "number",
+                "title": "Port of the mqtt broker (default 1883)"
+              },
+              "topicPrefix": {
+                "type": "string",
+                "title": "Topic prefix of the adapter (default zigbee2mqtt)"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
