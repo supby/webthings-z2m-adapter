@@ -199,16 +199,16 @@ export class Zigbee2MqttDevice extends Device {
     ((this as unknown) as { '@type': string[] })['@type'].push('OnOffSwitch');
 
     for (const feature of expose.features) {        
-      if (feature.name == 'state' || 
-          feature.name == 'state_left' || 
-          feature.name == 'state_right' || 
-          feature.name == 'state_bottom_left' || 
-          feature.name == 'state_bottom_right') {
-            console.log(`Creating property for ${feature.name}`);
+      if (feature.property == 'state' || 
+          feature.property == 'state_left' || 
+          feature.property == 'state_right' || 
+          feature.property == 'state_bottom_left' || 
+          feature.property == 'state_bottom_right') {
+            console.log(`Creating property for "${feature.property}"`);
 
               const property = new OnOffProperty(
                 this,
-                feature.name,
+                feature.property,
                 feature,
                 this.client,
                 this.deviceTopic

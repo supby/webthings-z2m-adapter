@@ -13,7 +13,7 @@ export class OnOffProperty extends Zigbee2MqttProperty<"boolean"> {
     ) {
       super(device, name, expose, client, deviceTopic, {
         '@type': 'OnOffProperty',
-        title: 'On',
+        title: name,
         type: parseType(expose),
       });
     }

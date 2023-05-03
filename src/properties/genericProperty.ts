@@ -55,7 +55,7 @@ export class Zigbee2MqttProperty<T extends PropertyValueType> extends Property<T
     additionalProperties?: PropertySchema
   ) {
     super(device, name, {
-      title: expose.name,
+      title: name,
       description: expose.description,
       type: parseType(expose),
       unit: parseUnit(expose.unit),

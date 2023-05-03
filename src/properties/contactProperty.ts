@@ -13,7 +13,7 @@ export class ContactProperty extends Zigbee2MqttProperty<"boolean"> {
   ) {
     super(device, name, expose, client, deviceTopic, {
       '@type': 'OpenProperty',
-      title: 'Open',
+      title: name,
       type: 'boolean',
     });
 

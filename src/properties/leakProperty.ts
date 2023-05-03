@@ -13,7 +13,7 @@ export class LeakProperty extends Zigbee2MqttProperty<"boolean"> {
   ) {
     super(device, name, expose, client, deviceTopic, {
       '@type': 'LeakProperty',
-      title: 'Leak',
+      title: name,
       type: 'boolean',
     });
 
