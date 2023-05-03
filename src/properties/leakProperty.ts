@@ -21,6 +21,6 @@ export class LeakProperty extends Zigbee2MqttProperty<"boolean"> {
   }
 
   update(value: boolean, update: Record<string, unknown>): void {
-    super.update(!value, update);
+    super.update(value, update);
   }
 }
