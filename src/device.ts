@@ -47,7 +47,7 @@ export class Zigbee2MqttDevice extends Device {
     super(adapter, id);
     this.deviceTopic = `${topicPrefix}/${deviceDefinition.friendly_name}`;
 
-    this.detectProperties(deviceDefinition);
+    this.detectDeviceProperties(deviceDefinition);
 
     console.log(`Subscribing to ${this.deviceTopic}`);
 
@@ -64,7 +64,7 @@ export class Zigbee2MqttDevice extends Device {
     }
   }
 
-  protected detectProperties(deviceDefinition: DeviceDefinition): void {
+  protected detectDeviceProperties(deviceDefinition: DeviceDefinition): void {
     for (const expose of deviceDefinition?.definition?.exposes ?? []) {
       switch (expose.type ?? '') {
         case 'light':
@@ -102,13 +102,13 @@ export class Zigbee2MqttDevice extends Device {
     }
   }
   createLockProperties(expose: Expos) {
-    throw new Error('Method not implemented.');
+    console.warn(`Method not implemented for expose: ${JSON.stringify(expose)}`);
   }
   createCoverProperties(expose: Expos) {
-    throw new Error('Method not implemented.');
+    console.warn(`Method not implemented for expose: ${JSON.stringify(expose)}`);
   }
   createFanProperties(expose: Expos) {
-    throw new Error('Method not implemented.');
+    console.warn(`Method not implemented for expose: ${JSON.stringify(expose)}`);
   }
 
   private createLightProperties(expose: Expos): void {
@@ -191,30 +191,31 @@ export class Zigbee2MqttDevice extends Device {
   }
 
   private createSwitchProperties(expose: Expos): void {
-    if (expose.features) {
-      ((this as unknown) as { '@type': string[] })['@type'].push('OnOffSwitch');
-
-      for (const feature of expose.features) {        
-        if (feature.name == 'state' || 
-            feature.name == 'state_left' || 
-            feature.name == 'state_right' || 
-            feature.name == 'state_bottom_left' || 
-            feature.name == 'state_bottom_right') {
-              console.log(`Creating property for ${feature.name}`);
-
-                const property = new OnOffProperty(
-                  this,
-                  feature.name,
-                  feature,
-                  this.client,
-                  this.deviceTopic
-                );
-
-                this.addProperty(property);
-            }
-      }
-    } else {
+    if (!expose.features) {
       console.warn(`Expected features array in switch expose: ${JSON.stringify(expose)}`);
+      return
+    }
+
+    ((this as unknown) as { '@type': string[] })['@type'].push('OnOffSwitch');
+
+    for (const feature of expose.features) {        
+      if (feature.name == 'state' || 
+          feature.name == 'state_left' || 
+          feature.name == 'state_right' || 
+          feature.name == 'state_bottom_left' || 
+          feature.name == 'state_bottom_right') {
+            console.log(`Creating property for ${feature.name}`);
+
+              const property = new OnOffProperty(
+                this,
+                feature.name,
+                feature,
+                this.client,
+                this.deviceTopic
+              );
+
+              this.addProperty(property);
+          }
     }
   }
 
