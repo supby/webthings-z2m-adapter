@@ -15,6 +15,8 @@ import { ColorProperty } from './properties/colorProperty';
 import { HeatingCoolingProperty } from './properties/heatingCoolingProperty';
 import { ContactProperty } from './properties/contactProperty';
 import { LeakProperty } from './properties/leakProperty';
+import { Config } from './config';
+import { staticConfig } from './staticConfig';
 
 const IGNORED_PROPERTIES = [
   'linkquality',
@@ -122,7 +124,7 @@ export class Zigbee2MqttDevice extends Device {
           switch (feature.name) {            
             case 'state':
               {
-                console.log(`Creating property for ${feature.name}`);
+                console.log(`[createLightProperties]: Creating property for ${feature.name}`);
 
                 const property = new OnOffProperty(
                   this,
@@ -137,7 +139,7 @@ export class Zigbee2MqttDevice extends Device {
               break;
             case 'brightness':
               {
-                console.log(`Creating property for ${feature.name}`);
+                console.log(`[device->createLightProperties]: Creating property for ${feature.name}`);
 
                 const property = new BrightnessProperty(
                   this,
@@ -152,7 +154,7 @@ export class Zigbee2MqttDevice extends Device {
               break;
             case 'color_temp':
               {
-                console.log(`Creating property for ${feature.name}`);
+                console.log(`[device->createLightProperties]: Creating property for ${feature.name}`);
 
                 const property = new ColorTemperatureProperty(
                   this,
@@ -167,7 +169,7 @@ export class Zigbee2MqttDevice extends Device {
               break;
             case 'color_xy':
               {
-                console.log(`Creating property for ${feature.name}`);
+                console.log(`[device->createLightProperties]: Creating property for ${feature.name}`);
 
                 const property = new ColorProperty(
                   this,
@@ -182,7 +184,7 @@ export class Zigbee2MqttDevice extends Device {
               break;
           }
         } else {
-          console.log(`Ignoring property without name: ${JSON.stringify(expose, null, 0)}`);
+          console.log(`[device->createLightProperties]: Ignoring property without name: ${JSON.stringify(expose, null, 0)}`);
         }
       }
     } else {
@@ -192,7 +194,7 @@ export class Zigbee2MqttDevice extends Device {
 
   private createSwitchProperties(expose: Expos): void {
     if (!expose.features) {
-      console.warn(`Expected features array in switch expose: ${JSON.stringify(expose)}`);
+      console.warn(`[device->createSwitchProperties]: Expected features array in switch expose: ${JSON.stringify(expose)}`);
       return
     }
 
@@ -204,17 +206,18 @@ export class Zigbee2MqttDevice extends Device {
           feature.property == 'state_right' || 
           feature.property == 'state_bottom_left' || 
           feature.property == 'state_bottom_right') {
-            console.log(`Creating property for "${feature.property}"`);
 
-              const property = new OnOffProperty(
-                this,
-                feature.property,
-                feature,
-                this.client,
-                this.deviceTopic
-              );
+            console.log(`[device->createSwitchProperties]: Creating property for "${feature.property}"`);
 
-              this.addProperty(property);
+            const property = new OnOffProperty(
+              this,
+              feature.property,
+              feature,
+              this.client,
+              this.deviceTopic
+            );
+
+            this.addProperty(property);
           }
     }
   }
@@ -400,9 +403,9 @@ export class Zigbee2MqttDevice extends Device {
         );
 
         if (!exists) {
-          // if (debug()) {
-          //   console.log(`Event '${value}' does not exist on ${this.getTitle()} (${this.getId()})`);
-          // }
+          if (staticConfig.adapterDebugLogs) {
+            console.log(`[device->update]: Event '${value}' does not exist on ${this.getTitle()} (${this.getId()})`);
+          }
           continue;
         }
 
@@ -414,9 +417,9 @@ export class Zigbee2MqttDevice extends Device {
         if (property) {
           property.update(value, update);
         } 
-        // else if (debug()) {
-        //   console.log(`Property '${key}' does not exist on ${this.getTitle()} (${this.getId()})`);
-        // }
+        else if (staticConfig.adapterDebugLogs) {
+          console.log(`[device->update]: Property '${key}' does not exist on ${this.getTitle()} (${this.getId()})`);
+        }
       }
     }
   }
@@ -430,9 +433,9 @@ export class Zigbee2MqttDevice extends Device {
       const writeTopic = `${this.deviceTopic}/set`;
       const json = { [name]: input };
 
-      // if (debug()) {
-      //   console.log(`Sending ${JSON.stringify(json)} to ${writeTopic}`);
-      // }
+      if (staticConfig.adapterDebugLogs) {
+        console.log(`[device->performAction]: Sending ${JSON.stringify(json)} to ${writeTopic}`);
+      }
 
       this.client.publish(writeTopic, JSON.stringify(json), (error) => {
         action.finish();

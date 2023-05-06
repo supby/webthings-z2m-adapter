@@ -73,11 +73,10 @@ export class Zigbee2MqttAdapter extends Adapter {
 
   onMqttMessage(topic: string, message: Buffer) {
     const raw = message.toString();
-
-    // TODO: read debug flag from config
-    //   if (debug()) {
-    //     console.log(`Received on ${topic}: ${raw}`);
-    //   }
+    
+    if (this.config.adapterDebugLogs) {
+      console.log(`[adapter->onMqttMessage]: Received on ${topic}: ${raw}`);
+    }
 
     try {
       const json = JSON.parse(raw);
@@ -212,10 +211,6 @@ export class Zigbee2MqttAdapter extends Adapter {
     if (!existingDevice) {
       this.addNewDevice(id, deviceDefinition);
     }
-    // TODO: read debug flag from config
-    //   else if (debug()) {
-    //     console.log(`Device ${id} already exists`);
-    //   }      
   }
 
   private addNewDevice(id: string, deviceDefinition: DeviceDefinition) {
@@ -243,11 +238,10 @@ export class Zigbee2MqttAdapter extends Adapter {
     this.publish(removeTopic, JSON.stringify({ id: device.getId() }));
   }
 
-  private publish(topic: string, payload: string): void {
-    // TODO: read debug flag from config
-    // if (debug()) {
-    //   console.log(`Sending ${payload} to ${topic}`);
-    // }
+  private publish(topic: string, payload: string): void {    
+    if (this.config.adapterDebugLogs) {
+      console.log(`[adapter->publish]: Sending ${payload} to ${topic}`);
+    }
 
     this?.client?.publish(topic, payload, (error) => {
       if (error) {

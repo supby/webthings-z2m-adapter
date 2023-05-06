@@ -6,6 +6,7 @@ import {
 import { Expos } from '../adapter';
 import { Zigbee2MqttDevice } from '../device';
 import mqtt from 'mqtt';
+import { staticConfig } from '../staticConfig';
 
 
 export const WRITE_BIT = 0b010;
@@ -166,9 +167,9 @@ export class Zigbee2MqttProperty<T extends PropertyValueType> extends Property<T
       const writeTopic = `${this.deviceTopic}/set`;
       const json = { [this.getName()]: value };
 
-      // if (debug()) {
-      //   console.log(`Sending ${JSON.stringify(json)} to ${writeTopic}`);
-      // }
+      if (staticConfig.adapterDebugLogs) {
+        console.log(`[genericProperty->sendValue]: Sending ${JSON.stringify(json)} to ${writeTopic}`);
+      }
 
       this.client.publish(writeTopic, JSON.stringify(json), (error) => {
         if (error) {
