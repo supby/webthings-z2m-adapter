@@ -40,6 +40,7 @@
     "dist/adapter.js",
     "dist/device.js",
     "dist/driver.js",
+    "dist/staticConfig.js",
     "dist/properties/brightnessProperty.js",
     "dist/properties/colorProperty.js",
     "dist/properties/colorTemperatureProperty.js",

@@ -2,6 +2,7 @@ import { Adapter, AddonManagerProxy, Device } from 'gateway-addon';
 import { Config, Zigbee2MQTTAdapter } from './config';
 import mqtt, { OnConnectCallback } from 'mqtt';
 import { Zigbee2MqttDevice } from './device';
+import { staticConfig } from './staticConfig';
 
 interface Response {
   data?: {
@@ -45,7 +46,7 @@ export class Zigbee2MqttAdapter extends Adapter {
   ) {
     super(
         addonManager, 
-        `z2m-adapter-${adapterConfig.host}:${adapterConfig.port ?? DEFAULT_PORT}`,
+        `z2m-adapter-${adapterConfig.host}:${adapterConfig.port ?? DEFAULT_PORT}:${adapterConfig.topicPrefix ?? DEFAULT_TOPIC}`,
         packageName);
 
     this.prefix = adapterConfig.topicPrefix ?? DEFAULT_TOPIC;
@@ -218,6 +219,9 @@ export class Zigbee2MqttAdapter extends Adapter {
     this.handleDeviceAdded(device);
     this.deviceByFriendlyName[deviceDefinition.friendly_name as string] = device;
     device.fetchValues();
+
+    if (staticConfig.adapterDebugLogs)
+      console.log(`[adapter->addNewDevice]: Device added, id: ${id}, definition: ${JSON.stringify(deviceDefinition)}`);
   }
 
   startPairing(timeoutSeconds: number): void {
