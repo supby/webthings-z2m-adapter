@@ -17,17 +17,19 @@
     }
   },
   "options": {
-    "default": {
-      "optionalSetting": "default value"
+    "default": {      
     },
     "schema": {
       "type": "object",
       "required": [
-        "requiredSetting"
       ],
       "properties": {
         "zigbee2mqttDebugLogs": {
           "title": "Enable Zigbee2Mqtt debug logs",
+          "type": "boolean"
+        },
+        "adapterDebugLogs": {
+          "title": "Enable Adapter debug logs",
           "type": "boolean"
         },
         "zigbee2mqttAdapters": {

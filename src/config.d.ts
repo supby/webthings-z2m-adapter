@@ -6,6 +6,7 @@
  */
 
 export type EnableZigbee2MqttDebugLogs = boolean;
+export type EnableAdapterDebugLogs = boolean;
 export type HostnameOfTheMqttBrokerEGLocalhost = string;
 export type PortOfTheMqttBrokerDefault1883 = number;
 export type TopicPrefixOfTheAdapterDefaultZigbee2Mqtt = string;
@@ -13,6 +14,7 @@ export type ListOfZigbee2MQTTAdapters = Zigbee2MQTTAdapter[];
 
 export interface Config {
   zigbee2mqttDebugLogs?: EnableZigbee2MqttDebugLogs;
+  adapterDebugLogs?: EnableAdapterDebugLogs;
   zigbee2mqttAdapters?: ListOfZigbee2MQTTAdapters;
   [k: string]: unknown;
 }
