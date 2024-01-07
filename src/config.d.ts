@@ -10,6 +10,8 @@ export type EnableAdapterDebugLogs = boolean;
 export type HostnameOfTheMqttBrokerEGLocalhost = string;
 export type PortOfTheMqttBrokerDefault1883 = number;
 export type TopicPrefixOfTheAdapterDefaultZigbee2Mqtt = string;
+export type Username = string;
+export type Password = string;
 export type ListOfZigbee2MQTTAdapters = Zigbee2MQTTAdapter[];
 
 export interface Config {
@@ -22,5 +24,7 @@ export interface Zigbee2MQTTAdapter {
   host: HostnameOfTheMqttBrokerEGLocalhost;
   port?: PortOfTheMqttBrokerDefault1883;
   topicPrefix?: TopicPrefixOfTheAdapterDefaultZigbee2Mqtt;
+  username?: Username;
+  password?: Password;
   [k: string]: unknown;
 }

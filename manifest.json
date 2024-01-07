@@ -53,6 +53,14 @@
               "topicPrefix": {
                 "type": "string",
                 "title": "Topic prefix of the adapter (default zigbee2mqtt)"
+              },
+              "username": {
+                "type": "string",
+                "title": "Username"
+              },
+              "password": {
+                "type": "string",
+                "title": "Password"
               }
             }
           }

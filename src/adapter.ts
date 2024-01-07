@@ -160,7 +160,12 @@ export class Zigbee2MqttAdapter extends Adapter {
 
     console.log(`Connecting to broker ${broker}`);
 
-    const client = mqtt.connect(broker);
+    const client = mqtt.connect(
+      broker,
+      {
+        username: this.adapterConfig.username,
+        password: this.adapterConfig.password,
+      });
     this.client = client;
 
     client.on('connect', this.onMqttConnect(broker));
